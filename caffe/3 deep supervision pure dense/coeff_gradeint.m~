@@ -1,0 +1,198 @@
+% k = 3;
+% switch k
+%     case 1
+%         ans = 1
+%     case 2
+%         ans = 2
+%     otherwise
+%         ans = 3
+% end
+
+
+
+
+addpath('/home/albertxavier/workspace/JCNF/Inference/graphAnalysisToolbox-1.0');
+shift = 3
+alpha = 1;
+albedo = double(imread('albedo_test.png'));
+albedo_gt = double(imread('/home/albertxavier/dataset/sintel/images/albedo/alley_1/frame_0001.png'));
+albedo = albedo(:,:,channel);
+albedo_gt = albedo_gt(:,:,channel);
+% im = double(imread('/home/albertxavier/dataset/sintel/images/clean/alley_1/frame_0001.png'));
+% im = im(:,:,channel);
+% im_lum = mean(mat2gray(im),3);
+
+
+
+im_gx = double(imread('test_albedo_gx.png'));
+im_gy = double(imread('test_albedo_gy.png'));
+im_gx = im_gx(:,:,channel);
+im_gy = im_gy(:,:,channel);
+pairwise = cat(3, im_gy, im_gx);
+
+
+% crop
+size_ = 416;
+hb = 1;
+wb = min(1+floor(size_/2)*shift, 1024-size_+1);
+wb-1+size_
+
+% im = im(hb:hb+size_-1,wb:wb-1+size_,:);
+% albedo = albedo(hb:hb+size_-1,wb:wb-1+size_,:);
+% pairwise = pairwise(hb:hb+size_-1,wb:wb-1+size_,:);
+
+% im = im(hb:hb+size_-1,501:500+size_,:);
+% albedo = albedo(hb:hb+size_-1,501:500+size_,:);
+% pairwise = pairwise(hb:hb+size_-1,501:500+size_,:);
+
+
+% figure;
+% imshow((albedo/255.));
+
+
+%% convert to [0,255]
+%albedo = exp(albedo)-0.5;
+%pairwise = (exp(pairwise)-1.5)*255*2;
+
+%[h, w, c] = size(albedo);
+
+%kernel = -ones(3, 3, 3) / 8;
+%kernel(2,2,:) = 1;
+%ele = -1/8;
+
+%black = zeros(h,w,c);
+
+
+
+
+rows = (1:length(albedo(:)))';
+cols = (1:length(albedo(:)))';
+valsA = ones([length(albedo(:)),1]);
+A0 = sparse(rows, cols, valsA);
+b0 = sparse(albedo(:));
+
+% im_lum = cat(3, im_lum, im_lum, im_lum);
+% values = im_lum(:);
+% rows = (1:length(albedo(:)))';
+% cols = (1:length(albedo(:)))';
+% A2 = sparse(rows, cols, values);
+% b2 = sparse(im(:));
+
+%%
+rows = [];
+cols = [];
+values = [];
+% gy = diff(albedo_gt,1,1);
+% gx = diff(albedo_gt,1,2);
+% b1 = -[gy(:);gx(:)];
+
+
+[~, edges] = lattice(size(albedo,1),size(albedo,2),0);
+n = length(incidence(edges));
+A1 = [incidence(edges)];
+gy = pairwise(1:end-1,:,1);
+gx = pairwise(:,1:end-1,2);
+b1 = -[gy(:);gx(:)];
+
+
+% 
+% no = 1;
+% no2 = 1;
+% % gy
+% for k = 1 : size(albedo, 3)
+%    for j = 1 : size(albedo, 2)
+%       for i = 1 : size(albedo, 1)-1
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j,k);
+%            values(no2) = 1;
+%            no2 = no2 + 1;
+%         1 : size(albedo, 3)
+%    for j = 1 : size(albedo, 2)-1
+%       for i = 1 : size(albedo, 1)
+%            
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j,k);
+%            values(no2) = 1;
+%            no2 = no2 + 1;
+%            
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j+1,k);
+%            values(no2) = -1;
+%            no2 = no2 + 1;
+%            
+%            no = no + 1;
+%        end
+%    end
+% end
+% A1 = sparse(rows, cols, values);    rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i+1,j,k);
+%            values(no2) = -1;
+%            no2 = no2 + 1;
+%            no = no + 1;
+%        end
+%    end
+% end
+% % gx
+% for k = 1 : size(albedo, 3)
+%    for j = 1 : size(albedo, 2)-1
+%       for i = 1 : size(albedo, 1)
+%            
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j,k);
+%            values(no2) = 1;
+%            no2 = no2 + 1;
+%            
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j+1,k);
+%            values(no2) = -1;
+%            no2 = no2 + 1;
+%            
+%            no = no + 1;
+%        end
+%    end
+% end
+% A1 = sparse(rows, cols, values);albedo, 1)
+%            
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j,k);
+%            values(no2) = 1;
+%            no2 = no2 + 1;
+%            
+%            rows(no2) = no;
+%            cols(no2) = sub2ind(size(albedo), i,j+1,k);
+%            values(no2) = -1;
+%            no2 = no2 + 1;
+%            
+%            no = no + 1;
+%        end
+%    end
+% end
+% A1 = sparse(rows, cols, values);
+
+
+ans='end~~~'
+
+%%
+% A1 = sparse(rows, cols, values);
+% b1 = sparse(pairwise(:));
+
+
+%%
+
+A = [scale*A1;A0*alpha];
+b = [scale*b1;b0*alpha];
+
+upper_bound = albedo(:) + 100;
+lower_bound = albedo(:) - 50;
+
+disp('begin to solve')
+options = optimoptions('lsqlin','Display','iter'); %'Algorithm','interior-point',
+U = lsqlin(A,b,[],[],[],[],lower_bound,upper_bound,[], options); 
+u = reshape(U,size(albedo,1),size(albedo,2),size(albedo,3));
+% figure;
+% imshow(mat2gray(u));
+uu = u;
+uu(uu<0)= 0.;
+uu(uu>255)= 255.;
+uu = uu / 255.;
+imwrite(mat2gray(u), sprintf('./refine/c_%d.png', channel));
