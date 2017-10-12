@@ -234,8 +234,9 @@ def generatePairwiseGroundTruth(image, radius):
     return diff;
 
 def mySigmoid(x):
-    scale = 4.
-    return 2. * scale /(1.+np.exp(-x*4./50.))-scale
+    return x
+    # scale = 4.
+    # return 2. * scale /(1.+np.exp(-x*4./50.))-scale
 
 
 def synthesis(i, a, s):

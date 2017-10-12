@@ -1,0 +1,6 @@
+
+official
+http://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+
+unofficial
+https://github.com/jcjohnson/pytorch-examples#pytorch-control-flow--weight-sharing

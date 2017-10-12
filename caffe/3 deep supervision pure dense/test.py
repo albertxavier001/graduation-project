@@ -53,11 +53,16 @@ def generatePairwiseGroundTruth(image):
     
     return diff
 
+# def mySigmoid(x):
+#     return 4./(1.+np.exp(-x*4./50.))-2.
 def mySigmoid(x):
-    return 4./(1.+np.exp(-x*4./50.))-2.
+    return x
+    # scale = 4.
+    # return 2. * scale /(1.+np.exp(-x*4./50.))-scale
 
 def invMySigmoid(y):
-    return -50.0/4.0*np.log((2.0-y)/(2.0+y))
+    return y
+    # return -50.0/4.0*np.log((2.0-y)/(2.0+y))
 
 def predict(net, img):
     # Predicting function
