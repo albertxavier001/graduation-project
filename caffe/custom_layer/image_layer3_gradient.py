@@ -60,6 +60,10 @@ class ImageLayer3(caffe.Layer):
 
         self.cnt = 0
 
+        self.image_log = './image_log'
+        if not os.path.exists(self.image_log):
+            os.makedirs(self.image_log)
+
 
     def reshape(self, bottom, top):
         # load data for tops and  reshape tops to fit (1 is the batch dim)
@@ -162,10 +166,10 @@ class ImageLayer3(caffe.Layer):
         #     albedo_gt_2 = cv2.GaussianBlur(albedo_gt_2, (self.blur_ksize,self.blur_ksize), 0)
         # self.count += 1
 
-        cv2.imwrite('in.png', (in_[:,:,0:3]-in_[:,:,0:3].min())/(in_[:,:,0:3].max()-in_[:,:,0:3].min())*255)
-        cv2.imwrite('in2.png', (in_2[:,:,0:3]-in_2[:,:,0:3].min())/(in_2[:,:,0:3].max()-in_2[:,:,0:3].min())*255)
-        cv2.imwrite('albedo_gt.png', (albedo_gt_2[:,:,0:3]-albedo_gt_2[:,:,0:3].min())/(albedo_gt_2[:,:,0:3].max()-albedo_gt_2[:,:,0:3].min())*255)
-        cv2.imwrite('albedo_diff_gt.png', (albedo_gt[:,:,0:3]-albedo_gt[:,:,0:3].min())/(albedo_gt[:,:,0:3].max()-albedo_gt[:,:,0:3].min())*255)
+        cv2.imwrite(os.path.join(self.image_log, 'in.png'), (in_[:,:,0:3]-in_[:,:,0:3].min())/(in_[:,:,0:3].max()-in_[:,:,0:3].min())*255)
+        cv2.imwrite(os.path.join(self.image_log, 'in2.png'), (in_2[:,:,0:3]-in_2[:,:,0:3].min())/(in_2[:,:,0:3].max()-in_2[:,:,0:3].min())*255)
+        cv2.imwrite(os.path.join(self.image_log, 'albedo_gt.png'), (albedo_gt_2[:,:,0:3]-albedo_gt_2[:,:,0:3].min())/(albedo_gt_2[:,:,0:3].max()-albedo_gt_2[:,:,0:3].min())*255)
+        cv2.imwrite(os.path.join(self.image_log, 'albedo_diff_gt.png'), (albedo_gt[:,:,0:3]-albedo_gt[:,:,0:3].min())/(albedo_gt[:,:,0:3].max()-albedo_gt[:,:,0:3].min())*255)
 
         lum = 1.
         in_ *= lum
