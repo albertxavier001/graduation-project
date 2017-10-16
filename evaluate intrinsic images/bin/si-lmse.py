@@ -22,7 +22,8 @@ for hb in range(0, h-k, step):
 	for wb in range(0, w-k, step):
 		wd_im = im[hb:hb+k, wb:wb+k, :]
 		wd_gt = gt[hb:hb+k, wb:wb+k, :]
-		lmse += np.average((wd_im-wd_gt)**2)
+		si = np.sum(wd_im * wd_gt) / np.sum(wd_im**2)
+		lmse += np.average((wd_im*si - wd_gt)**2)
 		cnt += 1
 lmse  = lmse / cnt
 print lmse

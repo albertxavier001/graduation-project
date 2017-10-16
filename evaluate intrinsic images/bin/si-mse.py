@@ -11,18 +11,11 @@ args = parser.parse_args()
 
 gt = cv2.imread(args.gt) / 255.
 im = cv2.imread(args.im) / 255.
+alpha = np.sum(im * gt) / np.sum(im**2)
+si_mse = np.average((im*alpha - gt)**2)
+print "si_mse = ", si_mse
+si_mse
 
-h,w,c = gt.shape
-k = max(h,w) // 10
-step = k // 2
-lmse = 0.
-cnt = 0
 
-for hb in range(0, h-k, step):
-	for wb in range(0, w-k, step):
-		wd_im = im[hb:hb+k, wb:wb+k, :]
-		wd_gt = gt[hb:hb+k, wb:wb+k, :]
-		lmse += np.average((wd_im-wd_gt)**2)
-		cnt += 1
-lmse  = lmse / cnt
-print lmse
+
+
