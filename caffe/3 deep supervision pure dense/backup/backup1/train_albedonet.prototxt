@@ -1,8 +1,16 @@
-input: 'Python1'
-input_shape { dim: 1 dim: 3 dim: 32 dim: 32 }
-input: 'Python2'
-input_shape { dim: 1 dim: 6 dim: 32 dim: 32 }
-
+layer {
+  name: "Python1"
+  type: "Python"
+  top: "Python1"
+  top: "Python2"
+  top: "Python3"
+  top: "Python4"
+  python_param {
+    module: "image_layer3_gradient_g"
+    layer: "ImageLayer3"
+    param_str: "{\'data_dir\': \'/home/albertxavier/dataset/sintel/images/\', \'tops\': [\'data\', \'data2\', \'albedo_diff_gt\', \'albedo_gt\'],\'seed\': 1337,\'split\': \'train\', \'list_file\':\'train_two_folds_split_scene.txt\', \'mean_bgr\': (104.00699, 116.66877, 122.67892), \'crop_size\':(256,256)}"
+  }
+}
 layer {
   name: "Convolution1"
   type: "Convolution"
@@ -2083,6 +2091,72 @@ layer {
   type: "Convolution"
   bottom: "Dropout24"
   top: "Convolution35"
+  param {
+    lr_mult: 0.1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 0.2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 96
+    bias_term: false
+    pad: 0
+    kernel_size: 1
+    stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "Deconvolution4"
+  type: "Deconvolution"
+  bottom: "Convolution35"
+  top: "Deconvolution4"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 3
+    bias_term: true
+    pad: 2
+    kernel_size: 8
+    stride: 4
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "Concat17"
+  type: "Concat"
+  bottom: "Dropout24"
+  bottom: "Deconvolution4"
+  top: "Concat17"
+  propagate_down: true
+  propagate_down: false
+}
+layer {
+  name: "Convolution36"
+  type: "Convolution"
+  bottom: "Concat17"
+  top: "Convolution36"
   convolution_param {
     num_output: 16
     bias_term: true
@@ -2101,7 +2175,7 @@ layer {
 layer {
   name: "BatchNorm25"
   type: "BatchNorm"
-  bottom: "Convolution35"
+  bottom: "Convolution36"
   top: "BatchNorm25"
   param {
     lr_mult: 0
@@ -2147,20 +2221,20 @@ layer {
   }
 }
 layer {
-  name: "Concat17"
+  name: "Concat18"
   type: "Concat"
-  bottom: "Dropout24"
+  bottom: "Concat17"
   bottom: "Dropout25"
-  top: "Concat17"
+  top: "Concat18"
   concat_param {
     axis: 1
   }
 }
 layer {
-  name: "Convolution36"
+  name: "Convolution37"
   type: "Convolution"
-  bottom: "Concat17"
-  top: "Convolution36"
+  bottom: "Concat18"
+  top: "Convolution37"
   convolution_param {
     num_output: 16
     bias_term: true
@@ -2179,7 +2253,7 @@ layer {
 layer {
   name: "BatchNorm26"
   type: "BatchNorm"
-  bottom: "Convolution36"
+  bottom: "Convolution37"
   top: "BatchNorm26"
   param {
     lr_mult: 0
@@ -2225,20 +2299,20 @@ layer {
   }
 }
 layer {
-  name: "Concat18"
+  name: "Concat19"
   type: "Concat"
-  bottom: "Concat17"
+  bottom: "Concat18"
   bottom: "Dropout26"
-  top: "Concat18"
+  top: "Concat19"
   concat_param {
     axis: 1
   }
 }
 layer {
-  name: "Convolution37"
+  name: "Convolution38"
   type: "Convolution"
-  bottom: "Concat18"
-  top: "Convolution37"
+  bottom: "Concat19"
+  top: "Convolution38"
   convolution_param {
     num_output: 16
     bias_term: true
@@ -2257,7 +2331,7 @@ layer {
 layer {
   name: "BatchNorm27"
   type: "BatchNorm"
-  bottom: "Convolution37"
+  bottom: "Convolution38"
   top: "BatchNorm27"
   param {
     lr_mult: 0
@@ -2303,20 +2377,20 @@ layer {
   }
 }
 layer {
-  name: "Concat19"
+  name: "Concat20"
   type: "Concat"
-  bottom: "Concat18"
+  bottom: "Concat19"
   bottom: "Dropout27"
-  top: "Concat19"
+  top: "Concat20"
   concat_param {
     axis: 1
   }
 }
 layer {
-  name: "Convolution38"
+  name: "Convolution39"
   type: "Convolution"
-  bottom: "Concat19"
-  top: "Convolution38"
+  bottom: "Concat20"
+  top: "Convolution39"
   convolution_param {
     num_output: 16
     bias_term: true
@@ -2335,7 +2409,7 @@ layer {
 layer {
   name: "BatchNorm28"
   type: "BatchNorm"
-  bottom: "Convolution38"
+  bottom: "Convolution39"
   top: "BatchNorm28"
   param {
     lr_mult: 0
@@ -2381,20 +2455,20 @@ layer {
   }
 }
 layer {
-  name: "Concat20"
+  name: "Concat21"
   type: "Concat"
-  bottom: "Concat19"
+  bottom: "Concat20"
   bottom: "Dropout28"
-  top: "Concat20"
+  top: "Concat21"
   concat_param {
     axis: 1
   }
 }
 layer {
-  name: "Convolution39"
+  name: "Convolution40"
   type: "Convolution"
-  bottom: "Concat20"
-  top: "Convolution39"
+  bottom: "Concat21"
+  top: "Convolution40"
   convolution_param {
     num_output: 16
     bias_term: true
@@ -2413,7 +2487,7 @@ layer {
 layer {
   name: "BatchNorm29"
   type: "BatchNorm"
-  bottom: "Convolution39"
+  bottom: "Convolution40"
   top: "BatchNorm29"
   param {
     lr_mult: 0
@@ -2459,20 +2533,20 @@ layer {
   }
 }
 layer {
-  name: "Concat21"
+  name: "Concat22"
   type: "Concat"
-  bottom: "Concat20"
+  bottom: "Concat21"
   bottom: "Dropout29"
-  top: "Concat21"
+  top: "Concat22"
   concat_param {
     axis: 1
   }
 }
 layer {
-  name: "Convolution40"
+  name: "Convolution41"
   type: "Convolution"
-  bottom: "Concat21"
-  top: "Convolution40"
+  bottom: "Concat22"
+  top: "Convolution41"
   convolution_param {
     num_output: 336
     bias_term: false
@@ -2491,7 +2565,7 @@ layer {
 layer {
   name: "BatchNorm30"
   type: "BatchNorm"
-  bottom: "Convolution40"
+  bottom: "Convolution41"
   top: "BatchNorm30"
   param {
     lr_mult: 0
@@ -2528,10 +2602,10 @@ layer {
   top: "BatchNorm30"
 }
 layer {
-  name: "Convolution41"
+  name: "Convolution42"
   type: "Convolution"
   bottom: "BatchNorm30"
-  top: "Convolution41"
+  top: "Convolution42"
   convolution_param {
     num_output: 96
     bias_term: false
@@ -2548,10 +2622,10 @@ layer {
   }
 }
 layer {
-  name: "Deconvolution4"
+  name: "Deconvolution5"
   type: "Deconvolution"
-  bottom: "Convolution41"
-  top: "Deconvolution4"
+  bottom: "Convolution42"
+  top: "Deconvolution5"
   param {
     lr_mult: 10
     decay_mult: 1
@@ -2576,6 +2650,28 @@ layer {
     }
   }
 }
- 
-
- 
+layer {
+  name: "Python5"
+  type: "Python"
+  bottom: "Deconvolution5"
+  bottom: "Python3"
+  top: "Python5"
+  loss_weight: 1.0
+  python_param {
+    module: "l2loss-gradient-hist3-g"
+    layer: "L2LossLayer"
+    param_str: "{\'display\': True}"
+  }
+}
+layer {
+  name: "Python6"
+  type: "Python"
+  bottom: "Deconvolution4"
+  bottom: "Python4"
+  top: "Python6"
+  loss_weight: 1.0
+  python_param {
+    module: "l2loss"
+    layer: "L2LossLayer"
+  }
+}

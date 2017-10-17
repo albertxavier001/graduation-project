@@ -2592,8 +2592,8 @@ layer {
   top: "Python5"
   loss_weight: 1.0
   python_param {
-    module: "l2loss_gradient_hist3_g"
-    layer: "L2LossLayer"
+    module: "???"
+    layer: "???"
     param_str: "{\"display\": true}" 
   }
 }
