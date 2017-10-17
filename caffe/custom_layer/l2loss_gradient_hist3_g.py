@@ -106,6 +106,7 @@ class L2LossLayer(caffe.Layer):
                 self.inv += 1
         else :
             self.inv += 1
+        print 'inv = ', self.inv
 
 
     def backward(self, top, propagate_down, bottom):
