@@ -6,7 +6,7 @@ layer {
   top: "Python3"
   top: "Python4"
   python_param {
-    module: "image_layer3_gradient"
+    module: "image_layer3_gradient_g"
     layer: "ImageLayer3"
     param_str: "{\'data_dir\': \'/home/albertxavier/dataset/sintel/images/\', \'tops\': [\'data\', \'data2\', \'albedo_diff_gt\', \'albedo_gt\'],\'seed\': 1337,\'split\': \'train\', \'list_file\':\'train_two_folds_split_scene.txt\', \'mean_bgr\': (104.00699, 116.66877, 122.67892), \'crop_size\':(256,256)}"
   }
@@ -2592,8 +2592,9 @@ layer {
   top: "Python5"
   loss_weight: 1.0
   python_param {
-    module: "l2loss-gradient-hist3"
-    layer: "L2LossLayer"
+    module: "???"
+    layer: "???"
+    param_str: "{\"display\": true}" 
   }
 }
 
