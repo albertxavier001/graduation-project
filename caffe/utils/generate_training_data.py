@@ -11,14 +11,11 @@ for i, s in enumerate(all_scenes):
 training_scenes = []
 test_scenes = []
 for i in range(len(all_scenes)):
-	for j in range(len(all_scenes)):
-		if i >= j: continue
-		training_list = list(all_scenes)
-		training_list.remove(all_scenes[i])
-		training_list.remove(all_scenes[j])
-		test_list = [all_scenes[i], all_scenes[j]]
-		training_scenes.append(sorted(training_list))
-		test_scenes.append(sorted(test_list))
+	training_list = list(all_scenes)
+	training_list.remove(all_scenes[i])
+	test_list = [all_scenes[i]]
+	training_scenes.append(training_list)
+	test_scenes.append(test_list)
 
 
 # for i in range(len(training_scenes)):
@@ -77,22 +74,22 @@ for i in range(len(training_scenes)):
 
 	test_scenes[i] = sorted(test_scenes[i])
 	
-	split_scene_folder = os.path.join(out_folder, '{}.{}.as.test'.format(*test_scenes[i]))
+	split_scene_folder = os.path.join(out_folder, '{}.as.test'.format(*test_scenes[i]))
 	if not os.path.exists(split_scene_folder):
 		os.makedirs(split_scene_folder)
 
-	with open(os.path.join(split_scene_folder, 'training.clean.except.{}.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, 'training.clean.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(training_clean_str)
-	with open(os.path.join(split_scene_folder, 'training.albedo.except.{}.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, 'training.albedo.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(training_albedo_str)
-	with open(os.path.join(split_scene_folder, 'training.shading.except.{}.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, 'training.shading.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(training_shading_str)
 
-	with open(os.path.join(split_scene_folder, 'test.clean.{}.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, 'test.clean.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(test_clean_str)
-	with open(os.path.join(split_scene_folder, 'test.albedo.{}.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, 'test.albedo.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(test_albedo_str)
-	with open(os.path.join(split_scene_folder, 'test.shading.{}.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, 'test.shading.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(test_shading_str)
 
 

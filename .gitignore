@@ -31,6 +31,10 @@
 *.out
 *.app
 
+# images
+*.png
+*.jpg
+
 # models
 *.caffemodel
 *.solverstate
