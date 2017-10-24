@@ -112,6 +112,8 @@ for i in range(len(training_scenes)):
 		f.write(training_shading_str)
 
 	""" generate solver """
+	if not os.path.exists(snapshot_folder):
+		os.makedirs(snapshot_folder)
 	solver = OrderedDict([
 		('net' , '"{}"'.format(prototxt_file)),
 		('base_lr' , 0.002),
