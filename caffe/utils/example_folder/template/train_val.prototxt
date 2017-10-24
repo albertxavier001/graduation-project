@@ -1,27 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 name: "train_direct_intrinsics"
 
 
@@ -32,7 +8,7 @@ layer {
   python_param {
     module: "caffe_helper.layers.data_layers"
     layer: "ImageDataLayer"
-    param_str: "dict(batch_size=4, source=expandvars('/home/lwp/workspace/direct-intrinsics/training/split_scene/alley_1.as.test/training.clean.except.alley_1.txt'),  mirror=True, shuffle=True, mean_value=[104, 117, 123], crop_size=(416, 416), pad=0, random_crop=True, random_scale=(1.0-0.2, 1.0+0.2), random_rotation=15, border_mode='BORDER_REFLECT')"
+    param_str: "dict(batch_size=4, source=expandvars(@@@clean@@@),  mirror=True, shuffle=True, mean_value=[104, 117, 123], crop_size=(416, 416), pad=0, random_crop=True, random_scale=(1.0-0.2, 1.0+0.2), random_rotation=15, border_mode='BORDER_REFLECT')"
   }
   include: { phase: TRAIN }
 }
@@ -46,7 +22,7 @@ layer {
   python_param {
     module: "caffe_helper.layers.data_layers"
     layer: "ImageDataLayer"
-    param_str: "dict(batch_size=4, source=expandvars('/home/lwp/workspace/direct-intrinsics/training/split_scene/alley_1.as.test/training.albedo.except.alley_1.txt'),  mirror=True, shuffle=True, color=True, crop_size=(416, 416), pad=0, random_crop=True, scale=1/256., random_scale=(1.0-0.2, 1.0+0.2), random_rotation=15)"
+    param_str: "dict(batch_size=4, source=expandvars(@@@albedo@@@),  mirror=True, shuffle=True, color=True, crop_size=(416, 416), pad=0, random_crop=True, scale=1/256., random_scale=(1.0-0.2, 1.0+0.2), random_rotation=15)"
   }
   include: { phase: TRAIN }
 }
@@ -61,54 +37,11 @@ layer {
   python_param {
     module: "caffe_helper.layers.data_layers"
     layer: "ImageDataLayer"
-    param_str: "dict(batch_size=4, source=expandvars('/home/lwp/workspace/direct-intrinsics/training/split_scene/alley_1.as.test/training.shading.except.alley_1.txt'),  mirror=True, shuffle=True, color=True, crop_size=(416, 416), pad=0, random_crop=True, scale=1/256., random_scale=(1.0-0.2, 1.0+0.2), random_rotation=15)"
+    param_str: "dict(batch_size=4, source=expandvars(@@@shading@@@),  mirror=True, shuffle=True, color=True, crop_size=(416, 416), pad=0, random_crop=True, scale=1/256., random_scale=(1.0-0.2, 1.0+0.2), random_rotation=15)"
   }
   include: { phase: TRAIN }
 }
 
-
-
-
-layer {
-  name: "data"
-  type: "Python"
-  top: "data"
-  python_param {
-    module: "caffe_helper.layers.data_layers"
-    layer: "ImageDataLayer"
-    param_str: "dict(batch_size=4, source=expandvars('/home/cad/lwp/workspace/direct-intrinsics/training/split_scene/alley_1.alley_2.as.test/test.clean.alley_1.alley_2.txt'), mean_value=[104, 117, 123], crop_size=(416, 416), shuffle=True, pad=0)"
-  }
-  include: { phase: TEST }
-}
-
-
-
-layer {
-  name: "albedo"
-  type: "Python"
-  top: "albedo"
-  python_param {
-    module: "caffe_helper.layers.data_layers"
-    layer: "ImageDataLayer"
-    param_str: "dict(batch_size=4, source=expandvars('/home/cad/lwp/workspace/direct-intrinsics/training/split_scene/alley_1.alley_2.as.test/test.albedo.alley_1.alley_2.txt'), color=True, crop_size=(416, 416), scale=1/256., shuffle=True, pad=0)"
-  }
-  include: { phase: TEST }
-}
-
-
-
-
-layer {
-  name: "shading"
-  type: "Python"
-  top: "shading"
-  python_param {
-    module: "caffe_helper.layers.data_layers"
-    layer: "ImageDataLayer"
-    param_str: "dict(batch_size=4, source=expandvars('/home/cad/lwp/workspace/direct-intrinsics/training/split_scene/alley_1.alley_2.as.test/test.shading.alley_1.alley_2.txt'), color=True, crop_size=(416, 416), scale=1/256., shuffle=True, pad=0)"
-  }
-  include: { phase: TEST }
-}
 
 
 
