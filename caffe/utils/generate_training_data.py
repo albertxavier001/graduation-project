@@ -1,7 +1,7 @@
 import os, sys, argparse, glob
 
 root = '/Volumes/xavier/dataset/sintel2/'
-out_folder = './split_scene'
+dest_root_folder = './split_scene'
 
 all_scenes  = glob.glob(os.path.join(root, 'clean/*'))
 for i, s in enumerate(all_scenes): 
@@ -74,22 +74,41 @@ for i in range(len(training_scenes)):
 
 	test_scenes[i] = sorted(test_scenes[i])
 	
-	split_scene_folder = os.path.join(out_folder, '{}.as.test'.format(*test_scenes[i]))
-	if not os.path.exists(split_scene_folder):
-		os.makedirs(split_scene_folder)
+	split_scene_folder = os.path.join(dest_root_folder, '{}'.format(*test_scenes[i]))
+	if not os.path.exists(split_scene_folder): os.makedirs(split_scene_folder)
 
-	with open(os.path.join(split_scene_folder, 'training.clean.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	training_folder = 'training/'
+
+
+	""" generate training lists """
+	training_source = 'list/'
+	if not os.path.exists(os.path.join(split_scene_folder, training_folder, training_source)): 
+		os.makedirs(os.path.join(split_scene_folder, training_folder, training_source))
+	
+	with open(os.path.join(split_scene_folder, training_folder, training_source, 'training.clean.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(training_clean_str)
-	with open(os.path.join(split_scene_folder, 'training.albedo.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, training_folder, training_source, 'training.albedo.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(training_albedo_str)
-	with open(os.path.join(split_scene_folder, 'training.shading.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, training_folder, training_source, 'training.shading.except.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(training_shading_str)
 
-	with open(os.path.join(split_scene_folder, 'test.clean.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	"""  """
+
+
+
+	test_folder = 'test/'
+	
+	""" generate test lists """
+
+	test_source = 'list/'
+	if not os.path.exists(os.path.join(split_scene_folder, test_folder, test_source)): 
+		os.makedirs(os.path.join(split_scene_folder, test_folder, test_source))
+
+	with open(os.path.join(split_scene_folder, test_folder, test_source, 'test.clean.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(test_clean_str)
-	with open(os.path.join(split_scene_folder, 'test.albedo.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, test_folder, test_source, 'test.albedo.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(test_albedo_str)
-	with open(os.path.join(split_scene_folder, 'test.shading.{}.txt'.format(*test_scenes[i])), 'w') as f:
+	with open(os.path.join(split_scene_folder, test_folder, test_source, 'test.shading.{}.txt'.format(*test_scenes[i])), 'w') as f:
 		f.write(test_shading_str)
 
 
