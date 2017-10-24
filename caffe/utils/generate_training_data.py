@@ -11,7 +11,7 @@ if platform.system() == 'Darwin':
 elif platform.system() == 'Linux':
 	root = '/home/lwp/workspace/sintel2'
 	dest_root_folder = '/home/lwp/workspace/direct-intrinsics/training/split_scene_final'
-	caffe_root = 'home/lwp/workspace/direct-intrinsics/modified_caffe/caffe'
+	caffe_root = '/home/lwp/workspace/direct-intrinsics/modified_caffe/caffe'
 	pretrained_model = '/home/lwp/workspace/caffe_model/vgg16.caffemodel'
 	template_root = '/home/lwp/workspace/graduation-project/caffe/utils/example_folder/template'
 
@@ -140,10 +140,10 @@ for i in range(len(training_scenes)):
 		os.makedirs(os.path.join(dest_root_folder, 'script', 'training'))
 	with open(os.path.join(dest_root_folder, 'script', 'training', 'train_{}.sh'.format(*test_scenes[i])), 'w') as f:
 		f.write('#!/usr/bin/env sh\n')
-		f.write(os.path.join(caffe_root, 'build/tools/caffe') + ' train \\\n')
-		f.write('-solver {} \\\n'.format(solver_file))
-		f.write('-weights ' + pretrained_model + '\\\n')
-		f.write('-gpu ' + str(gpu))
+		f.write(os.path.join(caffe_root, 'build/tools/caffe') + ' train ')
+		f.write('    -solver {} '.format(solver_file))
+		f.write('    -weights ' + pretrained_model)
+		f.write('    -gpu ' + str(gpu))
 
 	""" generate training prototxt """
 	prototxt = None
