@@ -10,7 +10,7 @@ if platform.system() == 'Darwin':
 	template_root = '/Users/albertxavier/Box Sync/Graduation Project/graduation-project/caffe/utils/example_folder/template/'
 elif platform.system() == 'Linux':
 	root = '/home/lwp/workspace/sintel2'
-	dest_root_folder = '/home/lwp/workspace/direct-intrinsics/training/split_scene'
+	dest_root_folder = '/home/lwp/workspace/direct-intrinsics/training/split_scene_final'
 	caffe_root = 'home/lwp/workspace/direct-intrinsics/modified_caffe/caffe'
 	pretrained_model = '/home/lwp/workspace/caffe_model/vgg16.caffemodel'
 	template_root = '/home/lwp/workspace/graduation-project/caffe/utils/example_folder/template'
