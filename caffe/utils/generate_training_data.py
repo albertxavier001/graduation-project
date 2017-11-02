@@ -3,17 +3,26 @@ from collections import OrderedDict
 
 
 if platform.system() == 'Darwin': 
+	print(platform.dist())
 	root = '/Volumes/Transcend/dataset/sintel2/'
 	dest_root_folder = './split_scene'
 	caffe_root = 'home/lwp/workspace/direct-intrinsics/modified_caffe/caffe'
 	pretrained_model = '/home/lwp/workspace/caffe_model/vgg16.caffemodel'
 	template_root = '/Users/albertxavier/Box Sync/Graduation Project/graduation-project/caffe/utils/example_folder/template/'
-elif platform.system() == 'Linux':
+elif platform.dist()[0] == 'Ubuntu' and platform.dist()[1] == '14.04': # zyypc
+	print(platform.dist())
 	root = '/home/lwp/workspace/sintel2'
 	dest_root_folder = '/home/lwp/workspace/direct-intrinsics/training/split_scene_final'
 	caffe_root = '/home/lwp/workspace/direct-intrinsics/modified_caffe/caffe'
 	pretrained_model = '/home/lwp/workspace/caffe_model/vgg16.caffemodel'
 	template_root = '/home/lwp/workspace/graduation-project/caffe/utils/example_folder/template'
+elif platform.dist()[0] == 'debian':
+	print(platform.dist())
+	root = '/home/albertxavier/dataset/sintel2'
+	dest_root_folder = '/home/albertxavier/workspace/direct-intrinsics/training/split_scene_final'
+	caffe_root = '/home/albertxavier/workspace/direct-intrinsics/modified_caffe/caffe'
+	pretrained_model = '/home/albertxavier/caffe_model/vgg16.caffemodel'
+	template_root = '/home/albertxavier/workspace/graduation-project/caffe/utils/example_folder/template'
 
 all_scenes  = glob.glob(os.path.join(root, 'clean/*'))
 for i, s in enumerate(all_scenes): 
@@ -48,7 +57,7 @@ test_albedo_str = ""
 test_shading_str = ""
 
 for i in range(len(training_scenes)):
-	print i
+	print(i)
 	
 	training_cleans = []
 	training_albedos = []
@@ -134,7 +143,9 @@ for i in range(len(training_scenes)):
 		for (k,v) in solver.items():
 			f.write(k + ': ' + str(v) + '\n')
 
-	gpu = i % 3 + 1
+	if platform.dist()[0] == 'debian': gpu = 0
+	elif platform.dist()[0] == 'Ubuntu' and platform.dist[1] == '14.04': gpu = i % 3 + 1
+	
 	""" generate train.sh """
 	if not os.path.exists(os.path.join(dest_root_folder, 'script', 'training')):
 		os.makedirs(os.path.join(dest_root_folder, 'script', 'training'))
