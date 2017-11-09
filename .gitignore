@@ -35,6 +35,10 @@
 *.png
 *.jpg
 
-# models
+# caffe models
 *.caffemodel
 *.solverstate
+
+# pytorch model
+*.pth.tar
+
