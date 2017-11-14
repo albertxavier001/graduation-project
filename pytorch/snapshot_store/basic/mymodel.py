@@ -107,72 +107,22 @@ class GradientNet(nn.Module):
         self.upsample_config = [2*2,4*2,8*2,16*2,32*2]
         
         self.pretrained_model = pretrained_model
+        # if use_gpu: self.pretrained_model.cuda()
         
-        # upsample pretrained features
-        self.upsample_8M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(64,16,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-        self.upsample_4M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(128,16,1)),
-            ('upsample', nn.Upsample(scale_factor=4, mode='bilinear'))
-        ]))
-        self.upsample_2M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(256,16,1)),
-            ('upsample', nn.Upsample(scale_factor=8, mode='bilinear'))
-        ]))
-        self.upsample_1M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(1024,16,1)),
-            ('upsample', nn.Upsample(scale_factor=16, mode='bilinear'))
-        ]))
-
-        self.compress16M = nn.Conv2d(64+4*16, 64, 1)
-
-        # upsample pretrained features
-        self.upsample_4M_for_8M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(128,16,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-        self.upsample_2M_for_8M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(256,16,1)),
-            ('upsample', nn.Upsample(scale_factor=4, mode='bilinear'))
-        ]))
-        self.upsample_1M_for_8M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(1024,16,1)),
-            ('upsample', nn.Upsample(scale_factor=8, mode='bilinear'))
-        ]))
-
-        self.compress8M = nn.Conv2d(64+3*16, 64, 1)
-
-        # upsample pretrained features
-        self.upsample_2M_for_4M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(256,64,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-        self.upsample_1M_for_4M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(1024,64,1)),
-            ('upsample', nn.Upsample(scale_factor=4, mode='bilinear'))
-        ]))
-
-        self.compress4M = nn.Conv2d(128+2*64, 128, 1)
-
-        # upsample pretrained features
-        self.upsample_1M_for_2M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(1024,256,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-
-        self.compress2M = nn.Conv2d(256+256, 256, 1)
-
         i=0; self.denseblock16 = self.build_blocks(self.block_config[i], self.num_input_features[i])
         i=1; self.denseblock08 = self.build_blocks(self.block_config[i], self.num_input_features[i])
         i=2; self.denseblock04 = self.build_blocks(self.block_config[i], self.num_input_features[i])
         i=3; self.denseblock02 = self.build_blocks(self.block_config[i], self.num_input_features[i])
         i=4; self.denseblock01 = self.build_blocks(self.block_config[i], self.num_input_features[i])
         
-        
-        # upsample final
+        # if use_gpu: self.denseblock16.cuda()
+        # if use_gpu: self.denseblock08.cuda()
+        # if use_gpu: self.denseblock04.cuda()
+        # if use_gpu: self.denseblock02.cuda()
+        # if use_gpu: self.denseblock01.cuda()
+            
         self.num_upsample_input_features = [92,176,352,480,800]
+#         for i in range(0, len(self.block_config)):
 
         i=0; self.upsample16 = nn.ConvTranspose2d(in_channels=self.num_upsample_input_features[i], out_channels=3, kernel_size=self.upsample_config[i], stride=2, padding=1, output_padding=0, groups=1, bias=True, dilation=1)
         i=1; self.upsample08 = nn.ConvTranspose2d(in_channels=self.num_upsample_input_features[i], out_channels=3, kernel_size=self.upsample_config[i], stride=4, padding=2, output_padding=0, groups=1, bias=True, dilation=1)
@@ -180,6 +130,12 @@ class GradientNet(nn.Module):
         i=3; self.upsample02 = nn.ConvTranspose2d(in_channels=self.num_upsample_input_features[i], out_channels=3, kernel_size=self.upsample_config[i], stride=16, padding=8, output_padding=0, groups=1, bias=True, dilation=1)
         i=4; self.upsample01 = nn.ConvTranspose2d(in_channels=self.num_upsample_input_features[i], out_channels=3, kernel_size=self.upsample_config[i], stride=32, padding=16, output_padding=0, groups=1, bias=True, dilation=1)
 
+        # if use_gpu: self.upsample16.cuda()
+        # if use_gpu: self.upsample08.cuda()
+        # if use_gpu: self.upsample04.cuda()
+        # if use_gpu: self.upsample02.cuda()
+        # if use_gpu: self.upsample01.cuda()
+        
 
         """merge v1"""
         self.merge = nn.Sequential()
@@ -195,9 +151,9 @@ class GradientNet(nn.Module):
 
         """merge v2"""
         # self.merge = nn.Sequential()
-        # self.merge.add_module('merge.denseblock', self.build_blocks((3,3,3), 3*len(self.block_config)))
-        # self.merge.add_module('merge.final.conv', nn.Conv2d(in_channels=85, out_channels=3, kernel_size=1))
-        # self.merge.add_module('merge.final.sigmoid', nn.Sigmoid())
+        # for i, block_num in enumerate([3,3,3]):
+        #     self.merge.add_module('merge.final', self.build_blocks(block_num, 3*len(self.block_config)))
+        # self.merge.add_module('merge.final', nn.Sigmoid())
         
 
     def forward(self, ft_input):
@@ -206,61 +162,10 @@ class GradientNet(nn.Module):
         ft_predict   = [0]*len(ft_pretrained)
         ft_upsampled = [0]*len(ft_pretrained)
         
-        upsampled_8M_for_16M = self.upsample_8M_for_16M(ft_pretrained[1])
-        upsampled_4M_for_16M = self.upsample_4M_for_16M(ft_pretrained[2])
-        upsampled_2M_for_16M = self.upsample_2M_for_16M(ft_pretrained[3])
-        upsampled_1M_for_16M = self.upsample_1M_for_16M(ft_pretrained[4])
-        
-
-        _16M = torch.cat([
-            ft_pretrained[0],
-            upsampled_8M_for_16M,
-            upsampled_4M_for_16M,
-            upsampled_2M_for_16M,
-            upsampled_1M_for_16M
-        ], 1)
-
-        _16M = self.compress16M(_16M)
-
-        upsampled_4M_for_8M = self.upsample_4M_for_8M(ft_pretrained[2])
-        upsampled_2M_for_8M = self.upsample_2M_for_8M(ft_pretrained[3])
-        upsampled_1M_for_8M = self.upsample_1M_for_8M(ft_pretrained[4])
-        
-        _8M = torch.cat([
-            ft_pretrained[1],
-            upsampled_4M_for_8M,
-            upsampled_2M_for_8M,
-            upsampled_1M_for_8M
-        ], 1)
-        
-        _8M = self.compress8M(_8M)
-
-        
-        upsampled_2M_for_4M = self.upsample_2M_for_4M(ft_pretrained[3])
-        upsampled_1M_for_4M = self.upsample_1M_for_4M(ft_pretrained[4])
-        
-        _4M = torch.cat([
-            ft_pretrained[2],
-            upsampled_2M_for_4M,
-            upsampled_1M_for_4M
-        ], 1)
-        
-        _4M = self.compress4M(_4M)
-
-        upsampled_1M_for_2M = self.upsample_1M_for_2M(ft_pretrained[4])
-        
-        _2M = torch.cat([
-            ft_pretrained[3],
-            upsampled_1M_for_2M
-        ], 1)
-        
-        _2M = self.compress2M(_2M)
-
-
-        i = 0; ft_predict[i] = self.denseblock16(_16M)
-        i = 1; ft_predict[i] = self.denseblock08(_8M)
-        i = 2; ft_predict[i] = self.denseblock04(_4M)
-        i = 3; ft_predict[i] = self.denseblock02(_2M)
+        i = 0; ft_predict[i] = self.denseblock16(ft_pretrained[i])
+        i = 1; ft_predict[i] = self.denseblock08(ft_pretrained[i])
+        i = 2; ft_predict[i] = self.denseblock04(ft_pretrained[i])
+        i = 3; ft_predict[i] = self.denseblock02(ft_pretrained[i])
         i = 4; ft_predict[i] = self.denseblock01(ft_pretrained[i])
         
         i = 0; ft_upsampled[i] = self.upsample16(ft_predict[i])
