@@ -182,22 +182,22 @@ class GradientNet(nn.Module):
 
 
         """merge v1"""
-        self.merge = nn.Sequential()
-        self.merge_in_channels =  (3*len(self.block_config), 64, 32, 16)
-        self.merge_out_channels = (                      64, 32, 16,  3)
-        for i in range(0, len(self.merge_out_channels)): 
-            self.merge.add_module('merge.norm.%d'%i, nn.BatchNorm2d(self.merge_in_channels[i])),
-            self.merge.add_module('merge.relu.%d'%i, nn.ReLU(inplace=True)),
-            self.merge.add_module('merge.conv.%d'%i, nn.Conv2d(in_channels=self.merge_in_channels[i], 
-                                out_channels=self.merge_out_channels[i], kernel_size=1))
-        self.merge.add_module('merge.final', nn.Sigmoid())
+        # self.merge = nn.Sequential()
+        # self.merge_in_channels =  (3*len(self.block_config), 64, 32, 16)
+        # self.merge_out_channels = (                      64, 32, 16,  3)
+        # for i in range(0, len(self.merge_out_channels)): 
+        #     self.merge.add_module('merge.norm.%d'%i, nn.BatchNorm2d(self.merge_in_channels[i])),
+        #     self.merge.add_module('merge.relu.%d'%i, nn.ReLU(inplace=True)),
+        #     self.merge.add_module('merge.conv.%d'%i, nn.Conv2d(in_channels=self.merge_in_channels[i], 
+        #                         out_channels=self.merge_out_channels[i], kernel_size=1))
+        # self.merge.add_module('merge.final', nn.Sigmoid())
         
 
         """merge v2"""
-        # self.merge = nn.Sequential()
-        # self.merge.add_module('merge.denseblock', self.build_blocks((3,3,3), 3*len(self.block_config)))
-        # self.merge.add_module('merge.final.conv', nn.Conv2d(in_channels=85, out_channels=3, kernel_size=1))
-        # self.merge.add_module('merge.final.sigmoid', nn.Sigmoid())
+        self.merge = nn.Sequential()
+        self.merge.add_module('merge_denseblock', self.build_blocks((3,3,3), 3*len(self.block_config)))
+        self.merge.add_module('merge_final_conv', nn.Conv2d(in_channels=85, out_channels=3, kernel_size=1))
+        self.merge.add_module('merge_final_sigmoid', nn.Sigmoid())
         
 
     def forward(self, ft_input):
