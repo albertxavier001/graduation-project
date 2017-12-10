@@ -31,9 +31,8 @@ class MyUtils(object):
 
         if return_image == True: 
             display = np.copy(gt)
-            mi, ma = display.min(), display.max()
             if gd == True: 
-                display = (display - display.max()) / (display.max()-display.min())
+                display += 0.5
         
         gt = gt.transpose((2,0,1))
         gt = gt[np.newaxis, :]
