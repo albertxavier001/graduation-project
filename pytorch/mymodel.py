@@ -107,8 +107,8 @@ class _MyTransition(nn.Sequential):
         self.add_module('norm', nn.BatchNorm2d(num_input_features))
         self.add_module('relu', nn.ReLU(inplace=True))
         self.add_module('conv', nn.Conv2d(num_input_features, num_output_features,
-                                          kernel_size=1, stride=1, padding=0, bias=False))
-        if pool_ks>1: self.add_module('pool', nn.AvgPool2d(kernel_size=pool_ks, stride=1, padding=(pool_ks-1)//2))
+                                          kernel_size=3, stride=1, padding=1, bias=False))
+        # if pool_ks>1: self.add_module('pool', nn.AvgPool2d(kernel_size=pool_ks, stride=1, padding=(pool_ks-1)//2))
 
 
     
@@ -327,7 +327,7 @@ class GradientNet(nn.Module):
             i=4; ft_pretrained[i] = self.compress_pretrained_01M(ft_pretrained[i])
 
         if self.debug==True: 
-            for i in range(len(ft_pretrained)): print(i, ft_pretrained[i].size())
+            for i in range(len(ft_pretrained)): print('compress pretrained', i, ft_pretrained[i].size())
         """ combine different scale features """
         upsampled_8M_for_16M = self.upsample_8M_for_16M(ft_pretrained[1])
         upsampled_4M_for_16M = self.upsample_4M_for_16M(ft_pretrained[2])
@@ -447,4 +447,11 @@ class GradientNet(nn.Module):
         merged_RGB[i] = merged_RGB[0]
         # ft_predict[-1] = self.deconv_16M_to_32M(ft_predict[i+1])
         # merged_RGB[i] = self.merge_toRGB_32M(ft_predict[i])
+        
+
+        if self.debug==True: 
+            for i in range(len(ft_predict)): 
+                if i != 4:
+                    print('merge after denseblocks', i, ft_predict[i].size())
+
         return RGB, merged_RGB
