@@ -144,12 +144,10 @@ class GradientNet(nn.Module):
         self.debug = debug
         final_channel = 3 
         if gradient == True: final_channel = 6
-        # self.block_config = [(3,3,3),(3,3,3),(3,3,3),(6,6,6),(12,12,12)]
         self.block_config = [(5,5),(5,5),(5,5),(5,5),(5,5)]
         self.num_pretrained_features = [64,64,128,256,1024]
         self.pretrained_scale = pretrained_scale
         self.num_input_features = [64,64,128,128,256]
-        # for i in range(len(self.num_input_features)): self.num_input_features[i] //= pretrained_scale 
 
 
         """ features channels after denseblocks """
@@ -158,22 +156,18 @@ class GradientNet(nn.Module):
             self.ch_after_DB[i] = self.calOutputChannel(self.num_input_features[i], blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale) 
 
         self.upsample_config = [2*2,4*2,8*2,16*2,32*2]
-        self.merge_config = (3,3,3)
-        self.merge_v3_config = [(5,5),(5,5),(5,5),(5,5),(5,5),(5,5)]
 
         self.pretrained_model = PreTrainedModel(densenet)
+
+        grow_16M = 16
         
         """ compress pretrained features """
-        i=0; self.compress_pretrained_16M = nn.Conv2d(self.num_pretrained_features[i], self.num_input_features[i], 1)
-        i=1; self.compress_pretrained_08M = nn.Conv2d(self.num_pretrained_features[i], self.num_input_features[i], 1)
-        i=2; self.compress_pretrained_04M = nn.Conv2d(self.num_pretrained_features[i], self.num_input_features[i], 1)
-        i=3; self.compress_pretrained_02M = nn.Conv2d(self.num_pretrained_features[i], self.num_input_features[i], 1)
-        i=4; self.compress_pretrained_01M = nn.Conv2d(self.num_pretrained_features[i], self.num_input_features[i], 1)
-        
-        
+        i=1; self.compress_pretrained_08M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        i=2; self.compress_pretrained_04M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        i=3; self.compress_pretrained_02M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        i=4; self.compress_pretrained_01M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
         
         # upsample pretrained features
-        grow_16M = 8
         self.upsample_8M_for_16M = nn.Sequential(OrderedDict([
             ('compress', nn.Conv2d(self.num_input_features[1],grow_16M,1)),
             ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
@@ -197,130 +191,19 @@ class GradientNet(nn.Module):
             ('upsample4', nn.Upsample(scale_factor=2, mode='bilinear'))
         ]))
 
-        self.compress16M = nn.Conv2d(self.num_input_features[0]+4*grow_16M, self.num_input_features[0], 1)
-
-        # upsample pretrained features
-        grow_08M = 8
-        self.upsample_4M_for_8M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[2],grow_08M,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-        self.upsample_2M_for_8M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[3],grow_08M,1)),
-            ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-        self.upsample_1M_for_8M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[4],grow_08M,1)),
-            ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample3', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-
-        self.compress8M = nn.Conv2d(self.num_input_features[1]+3*grow_08M, self.num_input_features[1], 1)
-
-        # upsample pretrained features
-        grow_04M = 8
-        self.upsample_2M_for_4M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[3],grow_04M,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-        self.upsample_1M_for_4M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[4],grow_04M,1)),
-            ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-
-        self.compress4M = nn.Conv2d(self.num_input_features[2]+2*grow_04M, self.num_input_features[2], 1)
-
-        # upsample pretrained features
-        grow_02M = 8
-        self.upsample_1M_for_2M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[4],grow_02M,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
-        ]))
-
-        self.compress2M = nn.Conv2d(self.num_input_features[3]+grow_02M, self.num_input_features[3], 1)
-
+        
         i=0; self.denseblock16 = self.build_blocks(self.block_config[i], self.num_input_features[i], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=1; self.denseblock08 = self.build_blocks(self.block_config[i], self.num_input_features[i], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=2; self.denseblock04 = self.build_blocks(self.block_config[i], self.num_input_features[i], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=3; self.denseblock02 = self.build_blocks(self.block_config[i], self.num_input_features[i], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=4; self.denseblock01 = self.build_blocks(self.block_config[i], self.num_input_features[i], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
         
-        
-        """ to RGB """
-        i=0; self.compress16_3ch = nn.Conv2d(self.ch_after_DB[i], final_channel, 1)
-        i=1; self.compress08_3ch = nn.Conv2d(self.ch_after_DB[i], final_channel, 1)
-        i=2; self.compress04_3ch = nn.Conv2d(self.ch_after_DB[i], final_channel, 1)
-        i=3; self.compress02_3ch = nn.Conv2d(self.ch_after_DB[i], final_channel, 1)
-        i=4; self.compress01_3ch = nn.Conv2d(self.ch_after_DB[i], final_channel, 1)
-        
+        final_channel = 3 + 6 + 1
+        i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
 
-        """ merge v3 """
-        """ use 3-channel """
-        self.ch_after_mg = [0]*6
-        i=4; self.ch_after_mg[i] = self.calOutputChannel(self.ch_after_DB[i], self.merge_v3_config[i], bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=3; self.ch_after_mg[i] = self.calOutputChannel(self.ch_after_DB[i], self.merge_v3_config[i], bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=2; self.ch_after_mg[i] = self.calOutputChannel(self.ch_after_DB[i], self.merge_v3_config[i], bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=1; self.ch_after_mg[i] = self.calOutputChannel(self.ch_after_DB[i], self.merge_v3_config[i], bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=0; self.ch_after_mg[i] = self.calOutputChannel(self.ch_after_DB[i], self.merge_v3_config[i], bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        i=5; self.ch_after_mg[i] = 64
-        
-        # i=4; self.deconv_01M_to_02M = nn.Sequential(OrderedDict([
-        #     ('deconv', nn.ConvTranspose2d(self.ch_after_DB[i], self.ch_after_DB[i-1], 4, stride=2, padding=1))
-        #     # ('norm', nn.BatchNorm2d())
-        # ]))
-        # i=3; self.deconv_02M_to_04M = nn.ConvTranspose2d(self.ch_after_mg[i], self.ch_after_DB[i-1], 4, stride=2, padding=1)
-        # i=2; self.deconv_04M_to_08M = nn.ConvTranspose2d(self.ch_after_mg[i], self.ch_after_DB[i-1], 4, stride=2, padding=1)
-        # i=1; self.deconv_08M_to_16M = nn.ConvTranspose2d(self.ch_after_mg[i], self.ch_after_DB[i-1], 4, stride=2, padding=1)
-        # i=0; self.deconv_16M_to_32M = nn.ConvTranspose2d(self.ch_after_mg[i], 64, 4, stride=2, padding=1)
-
-        i=4; self.deconv_01M_to_02M = _DeconvLayer(self.ch_after_DB[i], self.ch_after_DB[i-1])
-        i=3; self.deconv_02M_to_04M = _DeconvLayer(self.ch_after_mg[i], self.ch_after_DB[i-1])
-        i=2; self.deconv_04M_to_08M = _DeconvLayer(self.ch_after_mg[i], self.ch_after_DB[i-1])
-        i=1; self.deconv_08M_to_16M = _DeconvLayer(self.ch_after_mg[i], self.ch_after_DB[i-1])
-        i=0; self.deconv_16M_to_32M = _DeconvLayer(self.ch_after_mg[i], 64, 4)
-
-        i=4; self.transition02M = _MyTransition(self.ch_after_DB[i-1]*2, self.ch_after_DB[i-1])
-        i=3; self.transition04M = _MyTransition(self.ch_after_DB[i-1]*2, self.ch_after_DB[i-1])
-        i=2; self.transition08M = _MyTransition(self.ch_after_DB[i-1]*2, self.ch_after_DB[i-1])
-        i=1; self.transition16M = _MyTransition(self.ch_after_DB[i-1]*2, self.ch_after_DB[i-1])
-
-        deconv=True
-        self.merge_block_02M = self.build_blocks(self.merge_v3_config[3], self.ch_after_DB[3], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale, deconv=deconv)
-        self.merge_block_04M = self.build_blocks(self.merge_v3_config[2], self.ch_after_DB[2], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale, deconv=deconv)
-        self.merge_block_08M = self.build_blocks(self.merge_v3_config[1], self.ch_after_DB[1], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale, deconv=deconv)
-        self.merge_block_16M = self.build_blocks(self.merge_v3_config[0], self.ch_after_DB[0], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale, deconv=deconv)
-        # self.merge_block_32M = self.build_blocks(self.merge_v3_config[5], 64, ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        
-        i = 3; self.merge_toRGB_02M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
-        i = 2; self.merge_toRGB_04M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
-        i = 1; self.merge_toRGB_08M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
-        i = 0; self.merge_toRGB_16M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
-         
-        # i = 5; self.merge_toRGB_32M = nn.Sequential(OrderedDict([
-        #     ('toRGB', nn.ConvTranspose2d(self.ch_after_mg[0], final_channel, 4, stride=2, padding=1))
-        # ]))
-
-        """init weight"""
-        # for m in self.modules():
-        #     if isinstance(m, nn.ConvTranspose2d):
-        #         n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-        #         # std = math.sqrt(2. / n)
-        #         std = 1e-10
-        #         m.weight.data.normal_(0, std)
-        #         print ('ConvTranspose2d weight', std)
-        
     def forward(self, ft_input, go_through_merge=False):
         ft_pretrained = self.pretrained_model(ft_input)
 
         ft_predict = [0]*len(ft_pretrained)
-        ft_upsampled = [0]*len(ft_pretrained)
         
         """ compress pretrained features """
         if self.pretrained_scale > 1:
-            i=0; ft_pretrained[i] = self.compress_pretrained_16M(ft_pretrained[i])
             i=1; ft_pretrained[i] = self.compress_pretrained_08M(ft_pretrained[i])
             i=2; ft_pretrained[i] = self.compress_pretrained_04M(ft_pretrained[i])
             i=3; ft_pretrained[i] = self.compress_pretrained_02M(ft_pretrained[i])
@@ -328,6 +211,7 @@ class GradientNet(nn.Module):
 
         if self.debug==True: 
             for i in range(len(ft_pretrained)): print('compress pretrained', i, ft_pretrained[i].size())
+        
         """ combine different scale features """
         upsampled_8M_for_16M = self.upsample_8M_for_16M(ft_pretrained[1])
         upsampled_4M_for_16M = self.upsample_4M_for_16M(ft_pretrained[2])
@@ -348,110 +232,13 @@ class GradientNet(nn.Module):
             upsampled_1M_for_16M
         ], 1)
         
-        if self.debug==True: print('_16M', _16M.size())
-        _16M = self.compress16M(_16M)
-
-        upsampled_4M_for_8M = self.upsample_4M_for_8M(ft_pretrained[2])
-        upsampled_2M_for_8M = self.upsample_2M_for_8M(ft_pretrained[3])
-        upsampled_1M_for_8M = self.upsample_1M_for_8M(ft_pretrained[4])
         
-        _8M = torch.cat([
-            ft_pretrained[1],
-            upsampled_4M_for_8M,
-            upsampled_2M_for_8M,
-            upsampled_1M_for_8M
-        ], 1)
-        
-        if self.debug==True: print('_8M', _8M.size())
-        _8M = self.compress8M(_8M)
-
-        
-        upsampled_2M_for_4M = self.upsample_2M_for_4M(ft_pretrained[3])
-        upsampled_1M_for_4M = self.upsample_1M_for_4M(ft_pretrained[4])
-        
-        _4M = torch.cat([
-            ft_pretrained[2],
-            upsampled_2M_for_4M,
-            upsampled_1M_for_4M
-        ], 1)
-        
-        if self.debug==True: print('_4M', _4M.size())
-        _4M = self.compress4M(_4M)
-
-        upsampled_1M_for_2M = self.upsample_1M_for_2M(ft_pretrained[4])
-        
-        _2M = torch.cat([
-            ft_pretrained[3],
-            upsampled_1M_for_2M
-        ], 1)
-        
-        if self.debug==True: print('_2M', _2M.size())
-        _2M = self.compress2M(_2M)
-
         """ denseblocks for each scale """
-        i = 0; ft_predict[i] = self.denseblock16(_16M)
-        i = 1; ft_predict[i] = self.denseblock08(_8M)
-        i = 2; ft_predict[i] = self.denseblock04(_4M)
-        i = 3; ft_predict[i] = self.denseblock02(_2M)
-        i = 4; ft_predict[i] = self.denseblock01(ft_pretrained[i])
+        i=0; ft_predict[i] = self.denseblock16(_16M)
         
         if self.debug==True: 
             for i in range(len(ft_predict)): print('after denseblocks', i, ft_predict[i].size())
         
-        """ to RGB """
-        RGB = [0] * 6
-        i = 0; RGB[i] = self.compress16_3ch(ft_predict[i])
-        i = 1; RGB[i] = self.compress08_3ch(ft_predict[i])
-        i = 2; RGB[i] = self.compress04_3ch(ft_predict[i])
-        i = 3; RGB[i] = self.compress02_3ch(ft_predict[i])
-        i = 4; RGB[i] = self.compress01_3ch(ft_predict[i])
         
-        
-        if go_through_merge == False: return RGB, []
-        
-        if self.debug == True: print('go thr', go_through_merge)
-        
-
-        """merge v3"""
-        merged_RGB = [0]*6
-        # 02M
-        i=3;
-        ft_predict[i] = self.transition02M(torch.cat([self.deconv_01M_to_02M(ft_predict[i+1]) , ft_predict[i]],1))
-        ft_predict[i] = self.merge_block_02M(ft_predict[i])
-        merged_RGB[i] = self.merge_toRGB_02M(ft_predict[i])
-        if go_through_merge == '02M': return RGB, merged_RGB
-        
-        # 04M
-        i=2;
-        ft_predict[i] = self.transition04M(torch.cat([self.deconv_02M_to_04M(ft_predict[i+1]) , ft_predict[i]],1))
-        ft_predict[i] = self.merge_block_04M(ft_predict[i])
-        merged_RGB[i] = self.merge_toRGB_04M(ft_predict[i])
-        if go_through_merge == '04M': return RGB, merged_RGB
-        
-        # 08M
-        i=1;
-        ft_predict[i] = self.transition08M(torch.cat([self.deconv_04M_to_08M(ft_predict[i+1]) , ft_predict[i]],1))
-        ft_predict[i] = self.merge_block_08M(ft_predict[i])
-        merged_RGB[i] = self.merge_toRGB_08M(ft_predict[i])
-        if go_through_merge == '08M': return RGB, merged_RGB
-        
-        # 16M
-        i=0;
-        ft_predict[i] = self.transition16M(torch.cat([self.deconv_08M_to_16M(ft_predict[i+1]) , ft_predict[i]],1))
-        ft_predict[i] = self.merge_block_16M(ft_predict[i])
-        merged_RGB[i] = self.merge_toRGB_16M(ft_predict[i])
-        if go_through_merge == '16M': return RGB, merged_RGB
-        
-        # 32M
-        i=-1;
-        merged_RGB[i] = merged_RGB[0]
-        # ft_predict[-1] = self.deconv_16M_to_32M(ft_predict[i+1])
-        # merged_RGB[i] = self.merge_toRGB_32M(ft_predict[i])
-        
-
-        if self.debug==True: 
-            for i in range(len(ft_predict)): 
-                if i != 4:
-                    print('merge after denseblocks', i, ft_predict[i].size())
-
-        return RGB, merged_RGB
+        i=0; res = self.merge_toRGB_32M(ft_predict[i])
+        return res
