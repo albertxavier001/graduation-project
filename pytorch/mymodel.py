@@ -197,7 +197,7 @@ class GradientNet(nn.Module):
         final_channel = 3 + 6 + 1
         i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
 
-    def forward(self, ft_input, go_through_merge=False):
+    def forward(self, ft_input):
         ft_pretrained = self.pretrained_model(ft_input)
 
         ft_predict = [0]*len(ft_pretrained)
