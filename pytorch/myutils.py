@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import torch
 from torch.autograd import Variable
-
+from graphviz import Digraph
 
 
 class MyUtils(object):
@@ -15,12 +15,16 @@ class MyUtils(object):
         input: gt: tensor
         output: gt: variable
     """
-    def tensor2Numpy(self, x):
+    def tensor2Numpy(self, x, use_cuda=True):
+        if use_cuda == True: 
+            x = x.cpu().data.numpy()
+        else:
+            x = x.data.numpy()
         x = x[0,:,:,:]
         x = x.transpose((1,2,0))
         return x
 
-    def numpy2Tensor(self.x):
+    def numpy2Tensor(self, x):
         x = x.transpose((2,0,1))
         x = x[np.newaxis, :]
         x = Variable(torch.from_numpy(x))
@@ -86,14 +90,15 @@ class MyUtils(object):
             a = image[:,:,:,0:w-1]
             b = image[:,:,:,1:w]
             return a - b
-        elif: direction == 'y'
+        elif direction == 'y':
             [n,c,h,w] = image.size()
             a = image[:,:,0:h-1,:]
             b = image[:,:,1:h,:]
             return a - b
 
-    def adjust_learning_rate(self, optimizer, epoch, beg, end, reset_lr=None, base_lr=args.base_lr):
+    def adjust_learning_rate(self, optimizer, args, epoch, beg, end, reset_lr=None):
         """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+        base_lr = args.base_lr
         for param_group in optimizer.param_groups:
             if reset_lr != None:
                 param_group['lr'] = reset_lr
@@ -101,6 +106,54 @@ class MyUtils(object):
             param_group['lr'] = base_lr * (float(end-epoch)/(end-beg)) ** (args.power)
             if param_group['lr'] < 1.0e-8: param_group['lr'] = 1.0e-8
 
+    def make_dot(self, var, params=None):
+        """ Produces Graphviz representation of PyTorch autograd graph
+        Blue nodes are the Variables that require grad, orange are Tensors
+        saved for backward in torch.autograd.Function
+        Args:
+            var: output Variable
+            params: dict of (name, Variable) to add names to node that
+                require grad (TODO: make optional)
+        """
+        if params is not None:
+            assert isinstance(params.values()[0], Variable)
+            param_map = {id(v): k for k, v in params.items()}
+
+        node_attr = dict(style='filled',
+                         shape='box',
+                         align='left',
+                         fontsize='12',
+                         ranksep='0.1',
+                         height='0.2')
+        dot = Digraph(node_attr=node_attr, graph_attr=dict(size="10240,10240"), format='svg')
+        seen = set()
+
+        def size_to_str(size):
+            return '('+(', ').join(['%d' % v for v in size])+')'
+
+        def add_nodes(var):
+            if var not in seen:
+                if torch.is_tensor(var):
+                    dot.node(str(id(var)), size_to_str(var.size()), fillcolor='orange')
+                elif hasattr(var, 'variable'):
+                    u = var.variable
+                    name = param_map[id(u)] if params is not None else ''
+                    node_name = '%s\n %s' % (name, size_to_str(u.size()))
+                    dot.node(str(id(var)), node_name, fillcolor='lightblue')
+                else:
+                    dot.node(str(id(var)), str(type(var).__name__))
+                seen.add(var)
+                if hasattr(var, 'next_functions'):
+                    for u in var.next_functions:
+                        if u[0] is not None:
+                            dot.edge(str(id(u[0])), str(id(var)))
+                            add_nodes(u[0])
+                if hasattr(var, 'saved_tensors'):
+                    for t in var.saved_tensors:
+                        dot.edge(str(id(t)), str(id(var)))
+                        add_nodes(t)
+        add_nodes(var.grad_fn)
+        return dot
 # test
 if __name__ == '__main__':
     pass

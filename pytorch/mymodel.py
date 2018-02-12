@@ -147,25 +147,27 @@ class GradientNet(nn.Module):
         self.block_config = [(5,5),(5,5),(5,5),(5,5),(5,5)]
         self.num_pretrained_features = [64,64,128,256,1024]
         self.pretrained_scale = pretrained_scale
-        self.num_input_features = [64,64,128,128,256]
+        #self.num_input_features = [64,64,128,128,256]
+        self.num_input_features = self.num_pretrained_features 
 
+
+         
+
+        self.pretrained_model = PreTrainedModel(densenet)
+
+        """upsample channel num"""
+        grow_16M = 16
 
         """ features channels after denseblocks """
         self.ch_after_DB = [0] * len(self.block_config)
         for i, blocks in enumerate(self.block_config):
-            self.ch_after_DB[i] = self.calOutputChannel(self.num_input_features[i], blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale) 
-
-        self.upsample_config = [2*2,4*2,8*2,16*2,32*2]
-
-        self.pretrained_model = PreTrainedModel(densenet)
-
-        grow_16M = 16
+            self.ch_after_DB[i] = self.calOutputChannel(self.num_input_features[i] + (4-i)*grow_16M, blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
         
-        """ compress pretrained features """
-        i=1; self.compress_pretrained_08M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
-        i=2; self.compress_pretrained_04M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
-        i=3; self.compress_pretrained_02M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
-        i=4; self.compress_pretrained_01M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        # """ compress pretrained features """
+        # i=1; self.compress_pretrained_08M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        # i=2; self.compress_pretrained_04M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        # i=3; self.compress_pretrained_02M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
+        # i=4; self.compress_pretrained_01M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
         
         # upsample pretrained features
         self.upsample_8M_for_16M = nn.Sequential(OrderedDict([
@@ -192,25 +194,25 @@ class GradientNet(nn.Module):
         ]))
 
         
-        i=0; self.denseblock16 = self.build_blocks(self.block_config[i], self.num_input_features[i], ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
+        i=0; self.denseblock16 = self.build_blocks(self.block_config[i], self.num_input_features[i] + (4-i)*grow_16M, ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
         
-        final_channel = 3 + 6 + 1
-        i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_mg[i], final_channel, 4, stride=2, padding=1)
+        final_channel = 3
+        i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_DB[i], final_channel, 4, stride=2, padding=1)
 
     def forward(self, ft_input):
         ft_pretrained = self.pretrained_model(ft_input)
 
         ft_predict = [0]*len(ft_pretrained)
         
-        """ compress pretrained features """
-        if self.pretrained_scale > 1:
-            i=1; ft_pretrained[i] = self.compress_pretrained_08M(ft_pretrained[i])
-            i=2; ft_pretrained[i] = self.compress_pretrained_04M(ft_pretrained[i])
-            i=3; ft_pretrained[i] = self.compress_pretrained_02M(ft_pretrained[i])
-            i=4; ft_pretrained[i] = self.compress_pretrained_01M(ft_pretrained[i])
+        # """ compress pretrained features """
+        # if self.pretrained_scale > 1:
+        #     i=1; ft_pretrained[i] = self.compress_pretrained_08M(ft_pretrained[i])
+        #     i=2; ft_pretrained[i] = self.compress_pretrained_04M(ft_pretrained[i])
+        #     i=3; ft_pretrained[i] = self.compress_pretrained_02M(ft_pretrained[i])
+        #     i=4; ft_pretrained[i] = self.compress_pretrained_01M(ft_pretrained[i])
 
-        if self.debug==True: 
-            for i in range(len(ft_pretrained)): print('compress pretrained', i, ft_pretrained[i].size())
+        # if self.debug==True: 
+        #     for i in range(len(ft_pretrained)): print('compress pretrained', i, ft_pretrained[i].size())
         
         """ combine different scale features """
         upsampled_8M_for_16M = self.upsample_8M_for_16M(ft_pretrained[1])
@@ -231,7 +233,6 @@ class GradientNet(nn.Module):
             upsampled_2M_for_16M,
             upsampled_1M_for_16M
         ], 1)
-        
         
         """ denseblocks for each scale """
         i=0; ft_predict[i] = self.denseblock16(_16M)
