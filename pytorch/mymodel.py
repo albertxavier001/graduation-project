@@ -196,7 +196,7 @@ class GradientNet(nn.Module):
         
         i=0; self.denseblock16 = self.build_blocks(self.block_config[i], self.num_input_features[i] + (4-i)*grow_16M, ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
         
-        final_channel = 3
+        final_channel = 3+3*2
         i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_DB[i], final_channel, 4, stride=2, padding=1)
 
     def forward(self, ft_input):

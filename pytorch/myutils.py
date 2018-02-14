@@ -1,7 +1,8 @@
-import torch 
 import cv2
 import numpy as np
-import torch
+import torch 
+import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 from graphviz import Digraph
 
@@ -85,16 +86,16 @@ class MyUtils(object):
         return diff.astype(np.float32);
 
     def makeGradientTorch(self, image, direction='x'):
+        filters = torch.Tensor(torch.zeros(3,3,3,3))
+        filters[:,:,1,1] = -1.
         if direction == 'x':
-            [n,c,h,w] = image.size()
-            a = image[:,:,:,0:w-1]
-            b = image[:,:,:,1:w]
-            return a - b
-        elif direction == 'y':
-            [n,c,h,w] = image.size()
-            a = image[:,:,0:h-1,:]
-            b = image[:,:,1:h,:]
-            return a - b
+            for i in range(3):
+                filters[i,i,2,1] = 1.
+        else:
+            for i in range(3):
+                filters[i,i,1,2] = 1.
+        filters = Variable(filters)
+        return F.conv2d(image, filters, padding=1)
 
     def adjust_learning_rate(self, optimizer, args, epoch, beg, end, reset_lr=None):
         """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -105,6 +106,12 @@ class MyUtils(object):
                 continue
             param_group['lr'] = base_lr * (float(end-epoch)/(end-beg)) ** (args.power)
             if param_group['lr'] < 1.0e-8: param_group['lr'] = 1.0e-8
+
+    def mse_loss_scalar(self, a, b, use_gpu=True):
+        mse_loss = nn.MSELoss().cuda() if use_gpu==True else nn.MSELoss()
+        loss = mse_loss(a, b)
+        loss = loss.data.cpu().numpy()[0] if use_gpu else loss.data.numpy()[0]
+        return loss
 
     def make_dot(self, var, params=None):
         """ Produces Graphviz representation of PyTorch autograd graph
