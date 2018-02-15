@@ -85,9 +85,9 @@ class MyUtils(object):
         diff[:,0:image.shape[1]-1,3:6] = diff_x
         return diff.astype(np.float32);
 
-    def makeGradientTorch(self, image, direction='x', gpu_num=0):
+    def makeGradientTorch(self, image, direction='x', use_gpu=True):
         filters = torch.Tensor(torch.zeros(3,3,3,3))
-        if gpu_num != None: filters = filters.cuda(gpu_num)
+        if use_gpu == True: filters = filters.cuda()
         for i in range(3):
             filters[i,i,1,1] = -1.
         if direction == 'x':
@@ -110,8 +110,7 @@ class MyUtils(object):
             if param_group['lr'] < 1.0e-8: param_group['lr'] = 1.0e-8
 
     def mse_loss_scalar(self, a, b, use_gpu=True):
-        mse_loss = nn.MSELoss().cuda() if use_gpu==True else nn.MSELoss()
-        loss = mse_loss(a, b)
+        loss = torch.mean((a-b)**2)
         loss = loss.data.cpu().numpy()[0] if use_gpu else loss.data.numpy()[0]
         return loss
 
