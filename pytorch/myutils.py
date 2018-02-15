@@ -85,9 +85,11 @@ class MyUtils(object):
         diff[:,0:image.shape[1]-1,3:6] = diff_x
         return diff.astype(np.float32);
 
-    def makeGradientTorch(self, image, direction='x'):
+    def makeGradientTorch(self, image, direction='x', gpu_num=0):
         filters = torch.Tensor(torch.zeros(3,3,3,3))
-        filters[:,:,1,1] = -1.
+        if gpu_num != None: filters = filters.cuda(gpu_num)
+        for i in range(3):
+            filters[i,i,1,1] = -1.
         if direction == 'x':
             for i in range(3):
                 filters[i,i,2,1] = 1.
