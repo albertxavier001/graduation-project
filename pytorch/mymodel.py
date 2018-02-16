@@ -162,8 +162,10 @@ class GradientNet(nn.Module):
         self.ch_after_DB = [0] * len(self.block_config)
         for i, blocks in enumerate(self.block_config):
             self.ch_after_DB[i] = self.calOutputChannel(self.num_input_features[i] + (4-i)*grow_16M, blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        
+        self.ch_after_DB[0] = 16 * (1+2+4+8+16)
+
         # """ compress pretrained features """
+        i=0; self.compress_pretrained_16M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
         # i=1; self.compress_pretrained_08M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
         # i=2; self.compress_pretrained_04M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
         # i=3; self.compress_pretrained_02M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
@@ -171,22 +173,22 @@ class GradientNet(nn.Module):
         
         # upsample pretrained features
         self.upsample_8M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[1],grow_16M,1)),
+            ('compress', nn.Conv2d(self.num_input_features[1],grow_16M*2,1)),
             ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
         ]))
         self.upsample_4M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[2],grow_16M,1)),
+            ('compress', nn.Conv2d(self.num_input_features[2],grow_16M*4,1)),
             ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
             ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear'))
         ]))
         self.upsample_2M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[3],grow_16M,1)),
+            ('compress', nn.Conv2d(self.num_input_features[3],grow_16M*8,1)),
             ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
             ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear')),
             ('upsample3', nn.Upsample(scale_factor=2, mode='bilinear')),
         ]))
         self.upsample_1M_for_16M = nn.Sequential(OrderedDict([
-            ('compress', nn.Conv2d(self.num_input_features[4],grow_16M,1)),
+            ('compress', nn.Conv2d(self.num_input_features[4],grow_16M*16,1)),
             ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
             ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear')),
             ('upsample3', nn.Upsample(scale_factor=2, mode='bilinear')),
@@ -198,6 +200,8 @@ class GradientNet(nn.Module):
         
         final_channel = 3+3*2+1+4
         i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_DB[i], final_channel, 4, stride=2, padding=1)
+        
+        self.final_act = nn.ReLU(inplace=True)
 
     def forward(self, ft_input):
         ft_pretrained = self.pretrained_model(ft_input)
@@ -211,6 +215,7 @@ class GradientNet(nn.Module):
         #     i=3; ft_pretrained[i] = self.compress_pretrained_02M(ft_pretrained[i])
         #     i=4; ft_pretrained[i] = self.compress_pretrained_01M(ft_pretrained[i])
 
+        i=0; ft_pretrained[i] = self.compress_pretrained_16M(ft_pretrained[i])
         # if self.debug==True: 
         #     for i in range(len(ft_pretrained)): print('compress pretrained', i, ft_pretrained[i].size())
         
@@ -242,4 +247,7 @@ class GradientNet(nn.Module):
         
         
         i=0; res = self.merge_toRGB_32M(ft_predict[i])
+
+        res[:,:,10:14,:] = self.final_act(res[:,:,10:14,:])
+
         return res
