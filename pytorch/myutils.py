@@ -92,10 +92,10 @@ class MyUtils(object):
             filters[i,i,1,1] = -1.
         if direction == 'x':
             for i in range(3):
-                filters[i,i,2,1] = 1.
+                filters[i,i,1,2] = 1.
         else:
             for i in range(3):
-                filters[i,i,1,2] = 1.
+                filters[i,i,2,1] = 1.
         filters = Variable(filters)
         return F.conv2d(image, filters, padding=1)
 

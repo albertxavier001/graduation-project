@@ -156,13 +156,13 @@ class GradientNet(nn.Module):
         self.pretrained_model = PreTrainedModel(densenet)
 
         """upsample channel num"""
-        grow_16M = 16
+        grow_16M = 32
 
         """ features channels after denseblocks """
         self.ch_after_DB = [0] * len(self.block_config)
         for i, blocks in enumerate(self.block_config):
             self.ch_after_DB[i] = self.calOutputChannel(self.num_input_features[i] + (4-i)*grow_16M, blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        INPUT_NUM = 16 * (1+2+4+8+16)
+        INPUT_NUM = grow_16M * (1+2+4+8+16)
         self.ch_after_DB[0] = self.calOutputChannel(INPUT_NUM, blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
 
         # """ compress pretrained features """
@@ -175,25 +175,25 @@ class GradientNet(nn.Module):
         # upsample pretrained features
         self.upsample_8M_for_16M = nn.Sequential(OrderedDict([
             ('compress', nn.Conv2d(self.num_input_features[1],grow_16M*2,1)),
-            ('upsample', nn.Upsample(scale_factor=2, mode='bilinear'))
+            ('upsample', nn.Upsample(scale_factor=2))
         ]))
         self.upsample_4M_for_16M = nn.Sequential(OrderedDict([
             ('compress', nn.Conv2d(self.num_input_features[2],grow_16M*4,1)),
-            ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear'))
+            ('upsample1', nn.Upsample(scale_factor=2)),
+            ('upsample2', nn.Upsample(scale_factor=2))
         ]))
         self.upsample_2M_for_16M = nn.Sequential(OrderedDict([
             ('compress', nn.Conv2d(self.num_input_features[3],grow_16M*8,1)),
-            ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample3', nn.Upsample(scale_factor=2, mode='bilinear')),
+            ('upsample1', nn.Upsample(scale_factor=2)),
+            ('upsample2', nn.Upsample(scale_factor=2)),
+            ('upsample3', nn.Upsample(scale_factor=2)),
         ]))
         self.upsample_1M_for_16M = nn.Sequential(OrderedDict([
             ('compress', nn.Conv2d(self.num_input_features[4],grow_16M*16,1)),
-            ('upsample1', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample2', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample3', nn.Upsample(scale_factor=2, mode='bilinear')),
-            ('upsample4', nn.Upsample(scale_factor=2, mode='bilinear'))
+            ('upsample1', nn.Upsample(scale_factor=2)),
+            ('upsample2', nn.Upsample(scale_factor=2)),
+            ('upsample3', nn.Upsample(scale_factor=2)),
+            ('upsample4', nn.Upsample(scale_factor=2))
         ]))
 
         
