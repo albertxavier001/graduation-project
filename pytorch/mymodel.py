@@ -144,7 +144,7 @@ class GradientNet(nn.Module):
         self.debug = debug
         final_channel = 3 
         if gradient == True: final_channel = 6
-        self.block_config = [(5,5),(5,5),(5,5),(5,5),(5,5)]
+        self.block_config = [(5,5,5, 5,5,5, 5,5,5, 5,5,5)]
         self.num_pretrained_features = [64,64,128,256,1024]
         self.pretrained_scale = pretrained_scale
         #self.num_input_features = [64,64,128,128,256]
@@ -162,7 +162,8 @@ class GradientNet(nn.Module):
         self.ch_after_DB = [0] * len(self.block_config)
         for i, blocks in enumerate(self.block_config):
             self.ch_after_DB[i] = self.calOutputChannel(self.num_input_features[i] + (4-i)*grow_16M, blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
-        self.ch_after_DB[0] = 16 * (1+2+4+8+16)
+        INPUT_NUM = 16 * (1+2+4+8+16)
+        self.ch_after_DB[0] = self.calOutputChannel(INPUT_NUM, blocks, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
 
         # """ compress pretrained features """
         i=0; self.compress_pretrained_16M = nn.Conv2d(self.num_pretrained_features[i], grow_16M, 1)
@@ -196,12 +197,12 @@ class GradientNet(nn.Module):
         ]))
 
         
-        i=0; self.denseblock16 = self.build_blocks(self.block_config[i], self.num_input_features[i] + (4-i)*grow_16M, ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
+        i=0; self.denseblock16 = self.build_blocks(self.block_config[i], INPUT_NUM, ks=3, bn_size=bn_size, growth_rate=growth_rate, transition_scale=transition_scale)
         
         final_channel = 3+3*2+1+4
         i=0; self.merge_toRGB_32M = nn.ConvTranspose2d(self.ch_after_DB[i], final_channel, 4, stride=2, padding=1)
         
-        self.final_act = nn.ReLU(inplace=True)
+        #self.final_act = nn.ReLU(inplace=False)
 
     def forward(self, ft_input):
         ft_pretrained = self.pretrained_model(ft_input)
@@ -248,6 +249,6 @@ class GradientNet(nn.Module):
         
         i=0; res = self.merge_toRGB_32M(ft_predict[i])
 
-        res[:,:,10:14,:] = self.final_act(res[:,:,10:14,:])
+        #res[:,:,10:14,:] = res[:,:,10:14,:]/10. + 1.
 
         return res
