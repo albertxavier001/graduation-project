@@ -1,0 +1,47 @@
+%% mylattice: function description
+function [A, b] = mylattice(im, gx, gy, scale)
+	[h,w,~] = size(gx)
+	num0 = h * w;
+	ori = reshape(1:num0, [h,w]);
+	
+	right =  ori + h;
+	down = ori + 1;
+	
+	ori = ori(1:end-1, 1:end-1);
+	right = right(1:end-1, 1:end-1);
+	down = down(1:end-1, 1:end-1);
+
+	ori = ori(:);
+	right = right(:);
+	down = down(:);
+	num = numel(ori);
+	
+	rows = (1:length(im(:)))';
+	cols = (1:length(im(:)))';
+	valsA = ones([length(im(:)),1]);
+	A0 = sparse(rows, cols, valsA);
+	b0 = sparse(im(:) * reshape());
+
+	row = [ori; ori];
+	col = [ori; right];
+	val = [-ones([num,1]);ones([num, 1])];
+	Ax = sparse(row, col, val, num0, num0);
+
+	row = [ori; ori];
+	col = [ori; down];
+	val = [-ones([num,1]);ones([num, 1])];
+	Ay = sparse(row, col, val, num0, num0);
+
+	A = [A0;Ax*scale;Ay*scale];
+
+
+	gx(end,:) = 0;
+	gx(:,end) = 0;
+	gy(end,:) = 0;
+	gy(:,end) = 0;
+	
+	bx =gx(:);
+	by =gy(:);
+	
+	b = [b0;bx*scale;by*scale];
+end

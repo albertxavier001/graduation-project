@@ -41,4 +41,6 @@
 
 # pytorch model
 *.pth.tar
+*.csv
+
 
